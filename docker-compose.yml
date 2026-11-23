@@ -1,0 +1,15 @@
+# MovieLens NoSQL pipeline - services started with: docker compose up -d
+
+services:
+
+  mongo:
+    image: mongo:7.0
+    container_name: movielens_mongo
+    ports:
+      - "27018:27017"              # 27017 is already used by another local container
+    volumes:
+      - mongo_data:/data/db        # database files, kept even if the container is removed
+      - ./data:/data/import:ro     # project data folder, read-only inside the container
+
+volumes:
+  mongo_data:
