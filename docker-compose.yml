@@ -11,5 +11,25 @@ services:
       - mongo_data:/data/db        # database files, kept even if the container is removed
       - ./data:/data/import:ro     # project data folder, read-only inside the container
 
+  cassandra:                                           
+    image: cassandra:5.0
+    container_name: movielens_cassandra
+    ports:
+      - "9042:9042"                # CQL port: cqlsh and Python drivers connect here
+    environment:
+      - MAX_HEAP_SIZE=1G           # memory limit for Cassandra (the PC has 16 GB)
+      - HEAP_NEWSIZE=256M
+    volumes:
+      - cassandra_data:/var/lib/cassandra   # database files, kept even if the container is removed
+      - ./data:/data/import:ro              # prepared CSV files, read-only
+      - ./cassandra:/cassandra:ro           # CQL scripts of the project, read-only
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' || exit 1"]
+      interval: 15s
+      timeout: 15s
+      retries: 20
+      start_period: 60s
+
 volumes:
   mongo_data:
+  cassandra_data:                                      
