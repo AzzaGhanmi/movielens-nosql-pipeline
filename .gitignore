@@ -8,3 +8,5 @@ __pycache__/
 
 # Secrets (passwords, API keys)
 .env
+# Python packages downloaded for the Docker image (pip download)
+wheels/
