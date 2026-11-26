@@ -11,7 +11,7 @@ from pathlib import Path
 
 # Path of the data folder: one level above src/
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-OUTPUT_FILE = DATA_DIR / "movies.json"                         # NEW
+OUTPUT_FILE = DATA_DIR / "movies.json"                         
 
 # Pattern for a year in parentheses at the end of a title, e.g. "(1995)"
 YEAR_PATTERN = re.compile(r"\s*\((\d{4})\)\s*$")
@@ -100,7 +100,7 @@ def compute_rating_stats(rating_rows):
             for movie_id in count}
 
 
-def build_movie_documents(movies, tags_by_movie, links_by_movie, stats_by_movie):   # NEW
+def build_movie_documents(movies, tags_by_movie, links_by_movie, stats_by_movie):   
     """Assemble one MongoDB document per movie from the four sources."""
     no_stats = {"rating_count": 0, "rating_avg": None}
     no_links = {"imdb": None, "tmdb": None}
@@ -122,13 +122,13 @@ def build_movie_documents(movies, tags_by_movie, links_by_movie, stats_by_movie)
 
 # ---------- LOAD (write the file that MongoDB will import) ----------
 
-def write_json(documents, path):                               # NEW
+def write_json(documents, path):                               
     """Write the documents as a JSON array, keeping accents readable."""
     with open(path, "w", encoding="utf-8") as f:
         json.dump(documents, f, ensure_ascii=False, indent=2)
 
 
-def main():                                                    # NEW
+def main():                                                    
     # Extract
     movies = read_csv("movies.csv")
     tag_rows = read_csv("tags.csv")
@@ -158,5 +158,5 @@ def main():                                                    # NEW
     print(json.dumps(documents[0], ensure_ascii=False, indent=2))
 
 
-if __name__ == "__main__":                                     # NEW
+if __name__ == "__main__":                                     
     main()
