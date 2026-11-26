@@ -11,7 +11,7 @@ services:
       - mongo_data:/data/db        # database files, kept even if the container is removed
       - ./data:/data/import:ro     # project data folder, read-only inside the container
 
-  cassandra:                                           
+  cassandra:
     image: cassandra:5.0
     container_name: movielens_cassandra
     ports:
@@ -30,6 +30,36 @@ services:
       retries: 20
       start_period: 60s
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.24
+    container_name: movielens_elasticsearch
+    ports:
+      - "9200:9200"                # REST API: Kibana, curl and Python connect here
+    environment:
+      - discovery.type=single-node         # one node only, no cluster to join
+      - xpack.security.enabled=false       # no password or HTTPS (local school project only)
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g         # memory limit for Elasticsearch
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qv '\"status\":\"red\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.19.24   # must be the same version as Elasticsearch
+    container_name: movielens_kibana
+    ports:
+      - "5601:5601"                # web interface: http://localhost:5601
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy   # start Kibana only when Elasticsearch is ready
+
 volumes:
   mongo_data:
-  cassandra_data:                                      
+  cassandra_data:
+  es_data:
