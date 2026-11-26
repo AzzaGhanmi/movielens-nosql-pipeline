@@ -1,0 +1,3 @@
+pymongo>=4.6,<5
+cassandra-driver>=3.29,<4
+elasticsearch>=8.15,<9
