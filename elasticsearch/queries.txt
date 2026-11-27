@@ -1,0 +1,99 @@
+# Elasticsearch queries of the project (Query DSL).
+# Run them in Kibana > Dev Tools > Console: http://localhost:5601/app/dev_tools#/console
+# filter_path keeps only the useful part of each response (hits or aggregations).
+
+# ---------- SIMPLE QUERIES ----------
+
+# S8 - match (full-text search): movies whose title contains "matrix"
+GET movies/_search?filter_path=hits.total,hits.hits._source
+{
+  "query": { "match": { "title": "matrix" } },
+  "_source": ["title", "year", "rating_avg"]
+}
+
+# S9 - term (exact value on a keyword field): animation movies
+GET movies/_search?filter_path=hits.total,hits.hits._source
+{
+  "query": { "term": { "genres": "Animation" } },
+  "_source": ["title", "year"],
+  "size": 5
+}
+
+# S10 - range: movies released between 2015 and 2018, most recent first
+GET movies/_search?filter_path=hits.total,hits.hits._source
+{
+  "query": { "range": { "year": { "gte": 2015, "lte": 2018 } } },
+  "_source": ["title", "year"],
+  "sort": [{ "year": "desc" }],
+  "size": 5
+}
+
+# S11 - count: number of ratings given by user 1
+GET ratings/_count
+{
+  "query": { "term": { "user_id": 1 } }
+}
+
+# ---------- ADVANCED QUERIES ----------
+
+# A9 - bool: full-text on tags + filter + sort: "dark" movies with at least 50 ratings
+GET movies/_search?filter_path=hits.total,hits.hits._source
+{
+  "query": {
+    "bool": {
+      "must":   [{ "match": { "tags": "dark" } }],
+      "filter": [{ "range": { "rating_count": { "gte": 50 } } }]
+    }
+  },
+  "sort": [{ "rating_avg": "desc" }],
+  "_source": ["title", "rating_avg", "rating_count"],
+  "size": 5
+}
+
+# A10 - terms aggregation + avg: number of ratings and average rating per genre
+GET ratings/_search?filter_path=aggregations
+{
+  "size": 0,
+  "aggs": {
+    "by_genre": {
+      "terms": { "field": "genres", "size": 20 },
+      "aggs": { "avg_rating": { "avg": { "field": "rating" } } }
+    }
+  }
+}
+
+# A11 - date_histogram: number of ratings per year
+GET ratings/_search?filter_path=aggregations
+{
+  "size": 0,
+  "aggs": {
+    "per_year": {
+      "date_histogram": { "field": "rated_at", "calendar_interval": "year", "format": "yyyy" }
+    }
+  }
+}
+
+# A12 - stats: count, min, max, average and sum of all the ratings
+GET ratings/_search?filter_path=aggregations
+{
+  "size": 0,
+  "aggs": { "rating_stats": { "stats": { "field": "rating" } } }
+}
+
+# A13 - terms ordered by a sub-aggregation: top 5 movies with at least 50 ratings
+GET ratings/_search?filter_path=aggregations
+{
+  "size": 0,
+  "aggs": {
+    "top_movies": {
+      "terms": {
+        "field": "title.keyword",
+        "size": 5,
+        "min_doc_count": 50,
+        "shard_min_doc_count": 50,
+        "order": { "avg_rating": "desc" }
+      },
+      "aggs": { "avg_rating": { "avg": { "field": "rating" } } }
+    }
+  }
+}
